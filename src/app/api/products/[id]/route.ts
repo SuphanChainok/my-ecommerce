@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import Product from '@/models/Product';
-import type { RouteContext } from 'next/server';
 
 // GET /api/products/:id
 export async function GET(
     _request: Request,
-    { params }: RouteContext<'/api/products/[id]'>
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params;

@@ -21,12 +21,14 @@ export default function CartPage() {
                 alert(data.error || 'เกิดข้อผิดพลาดในการชำระเงิน');
                 return;
             }
-            alert('ชำระเงินสำเร็จ! Order ID: ' + data.orderId);
-            clearCart();
-            window.location.href = '/';
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                alert('เกิดข้อผิดพลาดในการredirect');
+                setLoading(false);
+            }
         } catch {
             alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
-        } finally {
             setLoading(false);
         }
     };

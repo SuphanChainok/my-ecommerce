@@ -1,5 +1,7 @@
 'use client';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
+import { useEffect, useState } from 'react';
 
 interface ProductProps {
     _id: string;
@@ -11,6 +13,39 @@ interface ProductProps {
 }
 
 export default function ProductCard({ product }: { product: ProductProps }) {
+    const { user } = useAuth();
+    const [isWishlisted, setIsWishlisted] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (!user) return;
+        fetch('/api/wishlist')
+            .then((r) => r.ok ? r.json() : Promise.reject())
+            .then((data) => {
+                setIsWishlisted((data.wishlist || []).some((p: any) => String(p._id) === String(product._id)));
+            })
+            .catch(() => {});
+    }, [user, product._id]);
+
+    const toggleWishlist = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!user || loading) return;
+        setLoading(true);
+        try {
+            const res = await fetch('/api/wishlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId: product._id }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setIsWishlisted(data.isWishlisted);
+            }
+        } catch {}
+        setLoading(false);
+    };
+
     return (
         <Link href={`/products/${product._id}`} className="glass rounded-3xl overflow-hidden group hover:-translate-y-2 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(139,92,246,0.15)] hover:border-violet-500/30 flex flex-col h-full relative">
             <div className="relative w-full aspect-4/3 overflow-hidden">
@@ -20,7 +55,17 @@ export default function ProductCard({ product }: { product: ProductProps }) {
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100"
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-[#050505] to-transparent opacity-60"></div>
-                
+
+                {user && (
+                    <button
+                        onClick={toggleWishlist}
+                        disabled={loading}
+                        className={`absolute top-4 left-4 w-10 h-10 rounded-full backdrop-blur-md text-white flex items-center justify-center shadow-lg transition-all duration-300 ${isWishlisted ? 'bg-red-500/90 shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'bg-black/40 border border-white/20 hover:border-red-500/50'}`}
+                    >
+                        ♥
+                    </button>
+                )}
+
                 {product.stock <= 0 && (
                     <div className="absolute top-4 right-4 bg-red-500/80 backdrop-blur-md text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.4)]">
                         Sold Out
@@ -32,7 +77,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
                     </div>
                 )}
             </div>
-            
+
             <div className="p-6 flex flex-col flex-1 relative z-10 bg-linear-to-b from-transparent to-[#050505]/90 -mt-10">
                 <h3 className="text-xl font-semibold text-white mb-2 line-clamp-1 group-hover:text-cyan-400 transition-colors">
                     {product.name}
@@ -48,7 +93,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
                             {product.price.toLocaleString()}
                         </span>
                     </div>
-                    
+
                     <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-violet-500 group-hover:border-violet-500 group-hover:shadow-[0_0_20px_rgba(139,92,246,0.5)] transition-all duration-300 text-gray-400 group-hover:text-white">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">
                             <line x1="5" y1="12" x2="19" y2="12"></line>

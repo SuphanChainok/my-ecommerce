@@ -2,19 +2,58 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import Product from '@/models/Product';
 
-// GET: ดึงรายการสินค้าทั้งหมด
-export async function GET() {
+export async function GET(req: Request) {
     try {
         await connectDB();
-        const products = await Product.find({}).sort({ createdAt: -1 });
+
+        const url = new URL(req.url);
+        const search = url.searchParams.get('search') || '';
+        const category = url.searchParams.get('category') || '';
+        const minPrice = url.searchParams.get('minPrice');
+        const maxPrice = url.searchParams.get('maxPrice');
+        const sortBy = url.searchParams.get('sortBy') || 'newest';
+
+        const query: Record<string, any> = {};
+
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+
+        if (category) {
+            query.category = category;
+        }
+
+        if (minPrice || maxPrice) {
+            query.price = {};
+            if (minPrice) query.price.$gte = Number(minPrice);
+            if (maxPrice) query.price.$lte = Number(maxPrice);
+        }
+
+        let sort: Record<string, 1 | -1> = { createdAt: -1 };
+
+        switch (sortBy) {
+            case 'price-asc':
+                sort = { price: 1 };
+                break;
+            case 'price-desc':
+                sort = { price: -1 };
+                break;
+            case 'newest':
+                sort = { createdAt: -1 };
+                break;
+            case 'oldest':
+                sort = { createdAt: 1 };
+                break;
+        }
+
+        const products = await Product.find(query).sort(sort);
         return NextResponse.json(products);
     } catch (error) {
-        console.error('DATABASE ERROR:', error); // เพิ่มบรรทัดนี้
+        console.error('DATABASE ERROR:', error);
         return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
     }
 }
 
-// POST: เพิ่มสินค้าใหม่
 export async function POST(req: Request) {
     try {
         await connectDB();

@@ -1,9 +1,11 @@
 'use client';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Navbar() {
     const { totalItems } = useCart();
+    const { user, logout } = useAuth();
 
     return (
         <nav className="glass-nav sticky top-0 z-50 transition-all duration-300">
@@ -20,10 +22,23 @@ export default function Navbar() {
                 <div className="hidden md:flex items-center gap-10">
                     <Link href="/" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Home</Link>
                     <Link href="/products" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Discover</Link>
-                    <Link href="/products" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Collections</Link>
+                    {user && (
+                        <>
+                            <Link href="/wishlist" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Wishlist</Link>
+                            <Link href="/orders" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Orders</Link>
+                        </>
+                    )}
                 </div>
 
-                <div className="flex items-center">
+                <div className="flex items-center gap-4">
+                    {user ? (
+                        <div className="flex items-center gap-4">
+                            <span className="text-sm text-gray-300 hidden sm:block">{user.name}</span>
+                            <button onClick={logout} className="text-sm text-gray-400 hover:text-white transition-colors">Logout</button>
+                        </div>
+                    ) : (
+                        <Link href="/" className="text-sm text-gray-300 hover:text-white transition-colors">Login</Link>
+                    )}
                     <Link href="/cart" className="relative p-2.5 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center group">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 group-hover:text-white transition-colors">
                             <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>

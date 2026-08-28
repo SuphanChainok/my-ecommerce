@@ -1,37 +1,51 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 
-export default function SuccessPage() {
+function SuccessContent() {
     const searchParams = useSearchParams();
     const orderId = searchParams.get('orderId');
     const { clearCart } = useCart();
 
     useEffect(() => {
-        clearCart(); // ล้างตะกร้าสินค้าเมื่อชำระเงินสำเร็จ
+        clearCart();
     }, []);
 
     return (
-        <div className="text-center py-16 bg-white rounded-lg shadow max-w-md mx-auto my-10 p-8">
-            <div className="text-green-500 text-5xl mb-4">✓</div>
-            <h1 className="text-2xl font-bold mb-2">ชำระเงินสำเร็จ!</h1>
-            <p className="text-gray-600 mb-6">
-                ขอบคุณสำหรับการสั่งซื้อ ระบบได้ทำการบันทึกข้อมูลเรียบร้อยแล้ว
-            </p>
-            {orderId && (
-                <p className="text-xs text-gray-400 mb-6 font-mono">
-                    Order ID: {orderId}
+        <div className="page-container mt-10 flex items-center justify-center">
+            <div className="glass rounded-[2.5rem] p-12 md:p-16 max-w-lg w-full text-center border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)]">
+                <div className="w-20 h-20 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-4xl font-bold mx-auto mb-8 shadow-[0_0_30px_rgba(6,182,212,0.3)]">
+                    ✓
+                </div>
+                <h1 className="text-4xl font-extrabold text-white mb-4 tracking-tight">ชำระเงินสำเร็จ!</h1>
+                <p className="text-gray-400 text-lg font-light mb-8 leading-relaxed">
+                    ขอบคุณสำหรับการสั่งซื้อ ระบบได้ทำการบันทึกข้อมูลเรียบร้อยแล้ว
                 </p>
-            )}
-            <Link
-                href="/"
-                className="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
-            >
-                กลับหน้าหลัก
-            </Link>
+                {orderId && (
+                    <p className="text-xs text-gray-500 mb-10 font-mono bg-white/5 inline-block px-4 py-2 rounded-full border border-white/10">
+                        Order ID: {orderId}
+                    </p>
+                )}
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <Link href="/orders" className="btn-premium flex-1 text-center py-3.5">
+                        ดูประวัติคำสั่งซื้อ
+                    </Link>
+                    <Link href="/" className="btn-glass flex-1 text-center py-3.5">
+                        กลับหน้าหลัก
+                    </Link>
+                </div>
+            </div>
         </div>
+    );
+}
+
+export default function SuccessPage() {
+    return (
+        <Suspense fallback={<div className="page-container mt-10 flex items-center justify-center"><div className="w-12 h-12 border-4 border-white/10 border-t-cyan-400 rounded-full animate-spin"></div></div>}>
+            <SuccessContent />
+        </Suspense>
     );
 }

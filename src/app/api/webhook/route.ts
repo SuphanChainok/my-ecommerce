@@ -32,10 +32,10 @@ export async function POST(req: Request) {
         if (orderId) {
             await connectDB();
 
-            // อัปเดตสถานะออเดอร์เป็น PAID
+            // อัปเดตสถานะออเดอร์เป็น paid
             const order = await Order.findByIdAndUpdate(
                 orderId,
-                { status: 'PAID' },
+                { paymentStatus: 'paid', orderStatus: 'processing' },
                 { new: true }
             );
 

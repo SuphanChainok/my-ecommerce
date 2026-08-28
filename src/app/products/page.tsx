@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import ProductCard from '@/components/ProductCard';
 
 interface Product {
@@ -10,6 +10,7 @@ interface Product {
     description?: string;
     imageUrl?: string;
     stock: number;
+    category?: string;
 }
 
 function SkeletonCard() {
@@ -29,19 +30,40 @@ function SkeletonCard() {
     );
 }
 
+const categories = ['electronics', 'clothing', 'home', 'accessories', 'general'];
+
 export default function ProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [category, setCategory] = useState('');
+    const [minPrice, setMinPrice] = useState('');
+    const [maxPrice, setMaxPrice] = useState('');
+    const [sortBy, setSortBy] = useState('newest');
+    const [showFilters, setShowFilters] = useState(false);
 
-    useEffect(() => {
-        fetch('/api/products')
+    const fetchProducts = useCallback(() => {
+        const params = new URLSearchParams();
+        if (search) params.set('search', search);
+        if (category) params.set('category', category);
+        if (minPrice) params.set('minPrice', minPrice);
+        if (maxPrice) params.set('maxPrice', maxPrice);
+        if (sortBy) params.set('sortBy', sortBy);
+
+        setLoading(true);
+        fetch(`/api/products?${params.toString()}`)
             .then((r) => r.json())
             .then((data) => {
                 setProducts(Array.isArray(data) ? data : []);
                 setLoading(false);
             })
             .catch(() => setLoading(false));
-    }, []);
+    }, [search, category, minPrice, maxPrice, sortBy]);
+
+    useEffect(() => {
+        const timer = setTimeout(fetchProducts, 300);
+        return () => clearTimeout(timer);
+    }, [fetchProducts]);
 
     return (
         <div className="page-container animate-fade-in-up">
@@ -63,6 +85,86 @@ export default function ProductsPage() {
                 </div>
             </div>
 
+            {/* Search & Filters */}
+            <div className="glass rounded-3xl p-6 mb-10 border-white/10">
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1 relative">
+                        <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input
+                            type="text"
+                            placeholder="ค้นหาสินค้า..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-full pl-12 pr-6 py-3.5 text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition"
+                        />
+                    </div>
+                    <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="md:hidden btn-glass px-6 py-3.5 flex items-center justify-center gap-2"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="16" y2="12"></line><line x1="4" y1="18" x2="12" y2="18"></line></svg>
+                        ตัวกรอง
+                    </button>
+                    <div className="hidden md:flex items-center gap-3">
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="bg-white/5 border border-white/10 rounded-full px-5 py-3.5 text-white focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+                        >
+                            <option value="newest" className="bg-[#111]">สินค้าใหม่</option>
+                            <option value="price-asc" className="bg-[#111]">ราคาต่ำ-สูง</option>
+                            <option value="price-desc" className="bg-[#111]">ราคาสูง-ต่ำ</option>
+                        </select>
+                    </div>
+                </div>
+
+                {showFilters && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/10">
+                        <div>
+                            <label className="block text-xs text-gray-400 uppercase tracking-widest font-bold mb-2">หมวดหมู่</label>
+                            <select
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-full px-5 py-3 text-white focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+                            >
+                                <option value="" className="bg-[#111]">ทั้งหมด</option>
+                                {categories.map((c) => (
+                                    <option key={c} value={c} className="bg-[#111]">{c}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs text-gray-400 uppercase tracking-widest font-bold mb-2">ราคาต่ำสุด</label>
+                            <input
+                                type="number"
+                                placeholder="0"
+                                value={minPrice}
+                                onChange={(e) => setMinPrice(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-full px-5 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs text-gray-400 uppercase tracking-widest font-bold mb-2">ราคาสูงสุด</label>
+                            <input
+                                type="number"
+                                placeholder="99999"
+                                value={maxPrice}
+                                onChange={(e) => setMaxPrice(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-full px-5 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50"
+                            />
+                        </div>
+                        <div className="flex items-end">
+                            <button
+                                onClick={() => { setSearch(''); setCategory(''); setMinPrice(''); setMaxPrice(''); setSortBy('newest'); }}
+                                className="w-full btn-glass py-3.5 rounded-full"
+                            >
+                                ล้างตัวกรอง
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
             {/* Grid */}
             {loading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
@@ -72,7 +174,7 @@ export default function ProductsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                     {products.length === 0 ? (
                         <div className="col-span-full py-24 text-center text-gray-500 glass rounded-3xl text-xl font-light">
-                            No products available at the moment.
+                            ไม่พบสินค้าที่ตรงกับเงื่อนไข
                         </div>
                     ) : (
                         products.map((p) => <ProductCard key={p._id} product={p} />)
