@@ -1,12 +1,18 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 
 export const metadata: Metadata = {
-  title: 'MyShop – Premium Electronics Store',
-  description: 'ร้านค้าออนไลน์คัดสรรสินค้าอิเล็กทรอนิกส์คุณภาพสูง จัดส่งไว ราคาคุ้มค่า',
+    title: 'MyShop – Premium Electronics Store',
+    description: 'ร้านค้าออนไลน์คัดสรรสินค้าอิเล็กทรอนิกส์คุณภาพสูง จัดส่งไว ราคาคุ้มค่า',
+};
+
+export const viewport: Viewport = {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
