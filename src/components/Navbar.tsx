@@ -28,6 +28,9 @@ export default function Navbar() {
                             <Link href="/orders" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Orders</Link>
                         </>
                     )}
+                    {user?.role === 'admin' && (
+                        <Link href="/admin" className="text-sm font-medium text-violet-400 hover:text-violet-300 transition-colors">Admin</Link>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -37,7 +40,10 @@ export default function Navbar() {
                             <button onClick={logout} className="text-sm text-gray-400 hover:text-white transition-colors">Logout</button>
                         </div>
                     ) : (
-                        <Link href="/" className="text-sm text-gray-300 hover:text-white transition-colors">Login</Link>
+                        <div className="flex items-center gap-3">
+                            <Link href="/login" className="text-sm text-gray-300 hover:text-white transition-colors">Login</Link>
+                            <Link href="/register" className="text-sm font-medium px-4 py-2 rounded-full bg-linear-to-r from-violet-500 to-cyan-400 text-white hover:opacity-90 transition-opacity">Register</Link>
+                        </div>
                     )}
                     <Link href="/cart" className="relative p-2.5 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center group">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 group-hover:text-white transition-colors">

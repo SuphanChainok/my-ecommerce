@@ -20,7 +20,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ user: null });
         }
 
-        return NextResponse.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+        return NextResponse.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role, shippingAddress: user.shippingAddress } });
     } catch {
         return NextResponse.json({ user: null });
     }

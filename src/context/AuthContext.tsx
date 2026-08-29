@@ -2,11 +2,22 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
+interface ShippingAddress {
+    fullName: string;
+    phone: string;
+    address: string;
+    subdistrict: string;
+    district: string;
+    province: string;
+    postalCode: string;
+}
+
 interface User {
     id: string;
     name: string;
     email: string;
     role: string;
+    shippingAddress?: ShippingAddress;
 }
 
 interface AuthContextType {

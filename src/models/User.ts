@@ -1,14 +1,14 @@
 import { Schema, model, models, Document, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-export interface IAddress {
-    label: string;
+export interface IShippingAddress {
     fullName: string;
     phone: string;
-    addressLine: string;
-    city: string;
+    address: string;
+    subdistrict: string;
+    district: string;
+    province: string;
     postalCode: string;
-    isDefault: boolean;
 }
 
 export interface IUser extends Document {
@@ -17,29 +17,31 @@ export interface IUser extends Document {
     email: string;
     password: string;
     role: 'user' | 'admin';
+    phone: string;
+    shippingAddress: IShippingAddress;
     wishlist: Types.ObjectId[];
-    addresses: IAddress[];
     comparePassword(candidate: string): Promise<boolean>;
 }
 
-const AddressSchema = new Schema<IAddress>({
-    label:       { type: String, required: true },
-    fullName:    { type: String, required: true },
-    phone:       { type: String, required: true },
-    addressLine: { type: String, required: true },
-    city:        { type: String, required: true },
-    postalCode:  { type: String, required: true },
-    isDefault:   { type: Boolean, default: false },
-});
+const ShippingAddressSchema = new Schema<IShippingAddress>({
+    fullName:    { type: String, default: '' },
+    phone:       { type: String, default: '' },
+    address:     { type: String, default: '' },
+    subdistrict: { type: String, default: '' },
+    district:    { type: String, default: '' },
+    province:    { type: String, default: '' },
+    postalCode:  { type: String, default: '' },
+}, { _id: false });
 
 const UserSchema = new Schema<IUser>(
     {
-        name:     { type: String, required: true },
-        email:    { type: String, required: true, unique: true, lowercase: true, trim: true },
-        password: { type: String, required: true },
-        role:     { type: String, enum: ['user', 'admin'], default: 'user' },
-        wishlist: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
-        addresses: [AddressSchema],
+        name:            { type: String, required: true },
+        email:           { type: String, required: true, unique: true, lowercase: true, trim: true },
+        password:        { type: String, required: true },
+        role:            { type: String, enum: ['user', 'admin'], default: 'user' },
+        phone:           { type: String, default: '' },
+        shippingAddress: { type: ShippingAddressSchema, default: {} },
+        wishlist:        [{ type: Schema.Types.ObjectId, ref: 'Product' }],
     },
     { timestamps: true }
 );

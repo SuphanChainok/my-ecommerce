@@ -11,15 +11,18 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 export async function POST(req: Request) {
     try {
         await connectDB();
-        const { items } = await req.json();
+        const { items, shippingAddress } = await req.json();
 
         if (!items || items.length === 0) {
             return NextResponse.json({ error: 'ไม่มีสินค้าในตะกร้า' }, { status: 400 });
         }
 
+        if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.address) {
+            return NextResponse.json({ error: 'กรุณากรอกที่อยู่จัดส่งให้ครบถ้วน' }, { status: 400 });
+        }
+
         const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-        // ดึงผู้ใช้จาก cookie
         const token = req.headers.get('cookie')?.split(';').find((c) => c.trim().startsWith('token='))?.split('=')[1];
         let userId: string | null = null;
 
@@ -28,24 +31,35 @@ export async function POST(req: Request) {
                 const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
                 userId = decoded.userId;
             } catch {
-                // ผู้ใช้ยังไม่ได้เข้าสู่ระบบ
+                return NextResponse.json({ error: 'กรุณาเข้าสู่ระบบก่อนชำระเงิน' }, { status: 401 });
             }
+        } else {
+            return NextResponse.json({ error: 'กรุณาเข้าสู่ระบบก่อนชำระเงิน' }, { status: 401 });
         }
 
         const totalAmount = items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
 
-        // สร้างออเดอร์ใน DB ก่อนแล้วส่ง orderId ไปกับ Stripe
         const order = await Order.create({
-            userId: userId || (await User.create({ name: 'Guest', email: 'guest@example.com', password: 'guest' }))._id,
+            userId,
             items: items.map((item: any) => ({
                 productId: item._id,
                 name: item.name,
                 price: item.price,
                 quantity: item.quantity || 1,
+                imageUrl: item.imageUrl || '',
             })),
             totalAmount,
             paymentStatus: 'pending',
-            orderStatus: 'processing',
+            orderStatus: 'pending',
+            shippingAddress: {
+                fullName: shippingAddress.fullName,
+                phone: shippingAddress.phone,
+                address: shippingAddress.address,
+                subdistrict: shippingAddress.subdistrict,
+                district: shippingAddress.district,
+                province: shippingAddress.province,
+                postalCode: shippingAddress.postalCode,
+            },
         });
 
         const lineItems = items.map((item: any) => ({
